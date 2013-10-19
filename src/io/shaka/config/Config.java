@@ -1,7 +1,8 @@
 package io.shaka.config;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -10,13 +11,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Config {
-    protected static Path FALLBACK_PROPERTIES = Paths.get("fallback.properties");
-    protected static Path APPLICATION_PROPERTIES = Paths.get("application.properties");
-    private final ConfigMap values = new ConfigMap();
+    protected static String FALLBACK_PROPERTIES = "fallback.properties";
+    protected static String APPLICATION_PROPERTIES = "application.properties";
+    private final ConfigMap values;
     private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\[.*?\\]|\\$\\{.*?\\}");
 
+    private Config(Path searchPath) {
+        this.values = new ConfigMap(searchPath);
+    }
+
+    public static Config    load(String packagePath) {
+        return new Config(Paths.get(packagePath));
+    }
+
     public static Config load() {
-        return new Config();
+        return new Config(Paths.get(""));
     }
 
     public String get(String key) {
@@ -34,23 +43,33 @@ public class Config {
 
     private static class ConfigMap {
         private final Map<Object, Object> values = System.getProperties();
+        private final Path searchPath;
 
-        private ConfigMap() {
+        private ConfigMap(Path searchPath) {
+            this.searchPath = searchPath;
             addPropertiesFor(APPLICATION_PROPERTIES);
             addPropertiesFor(FALLBACK_PROPERTIES);
         }
 
-        private void addPropertiesFor(Path propertiesFilePath) {
+        private void addPropertiesFor(String propertiesFile) {
+            InputStream resource = getResourceAsStream(propertiesFile);
             try {
-                Properties fallback = new Properties();
-                fallback.load(new FileReader(propertiesFilePath.toFile()));
-                for (Map.Entry<Object, Object> entry : fallback.entrySet()) {
-                    if (!values.containsKey(entry.getKey()))
-                        values.put(entry.getKey(), entry.getValue());
+                if (resource != null) {
+                    Properties props = new Properties();
+                    props.load(resource);
+                    for (Map.Entry<Object, Object> entry : props.entrySet()) {
+                        if (!values.containsKey(entry.getKey()))
+                            values.put(entry.getKey(), entry.getValue());
+                    }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        private InputStream getResourceAsStream(String propertiesFile) {
+            String propertiesFilePath = searchPath.resolve(propertiesFile).toString();
+            return getClass().getClassLoader().getResourceAsStream(propertiesFilePath);
         }
 
         private String get(String key) {

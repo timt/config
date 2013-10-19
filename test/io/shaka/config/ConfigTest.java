@@ -1,6 +1,5 @@
 package io.shaka.config;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileWriter;
@@ -12,6 +11,7 @@ import static io.shaka.config.Config.APPLICATION_PROPERTIES;
 import static io.shaka.config.Config.FALLBACK_PROPERTIES;
 import static io.shaka.config.Config.load;
 import static io.shaka.some.SomeValues.*;
+import static java.io.File.separator;
 import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -26,13 +26,9 @@ public class ConfigTest {
         assertThat(load().get(key), is(value));
     }
 
-    private String someValue() {
-        return some(string);
-    }
-
     @Test(expected = ConfigValueNotFoundForKeyException.class)
     public void throwsSensibleExceptionWhenPropetyDoesNotExist() {
-        load().get(someValue());
+        load().get(key);
     }
 
     @Test
@@ -50,71 +46,60 @@ public class ConfigTest {
 
     @Test
     public void readsPropertiesFromApplicationPropertiesFile() {
-        addProperty(key, value, APPLICATION_PROPERTIES);
-        assertThat(load().get(key), is(value));
+        assertThat(load().get("foo.bar"), is("bar"));
     }
 
     @Test
     public void applicationPropertiesDoNotOverrideSystemProperties() {
-        String fallbackValue = some(string);
-        System.setProperty(key, value);
-        addProperty(key, fallbackValue, APPLICATION_PROPERTIES);
-        assertThat(load().get(key), is(value));
+        System.setProperty("foo.bar", "not-bar");
+        assertThat(load().get("foo.bar"), is("not-bar"));
+        System.clearProperty("foo.bar");
+        assertThat(load().get("foo.bar"), is("bar"));
     }
 
     @Test
     public void readsPropertiesFromFallbackPropertiesFile() {
-        addProperty(key, value, FALLBACK_PROPERTIES);
-        assertThat(load().get(key), is(value));
+        assertThat(load().get("fin.barr"), is("saunders"));
     }
 
     @Test
     public void fallBackPropertiesDoNotOverrideSystemProperties() {
-        String fallbackValue = some(string);
-        System.setProperty(key, value);
-        addProperty(key, fallbackValue, FALLBACK_PROPERTIES);
-        assertThat(load().get(key), is(value));
+        System.setProperty("fin.barr", "not-saunders");
+        assertThat(load().get("fin.barr"), is("not-saunders"));
     }
 
     @Test
     public void fallBackPropertiesDoNotOverrideApplicationProperties() {
-        String fallbackValue = some(string);
-        addProperty(key, value, APPLICATION_PROPERTIES);
-        addProperty(key, fallbackValue, FALLBACK_PROPERTIES);
-        assertThat(load().get(key), is(value));
+        assertThat(load().get("foo.bar"), is("bar"));
     }
 
     @Test
     public void willMergeValues() {
-        System.setProperty("my.name", "Tim");
-        addProperty("my.surname", "Tennant", APPLICATION_PROPERTIES);
-        addProperty(key, "Hello ${my.name} ${my.surname}, how are you today?", FALLBACK_PROPERTIES);
-        assertThat(load().get(key), is("Hello Tim Tennant, how are you today?"));
+        System.setProperty("first.name", "Wade");
+        assertThat(load().get("greeting"), is("hello Wade Owen"));
     }
 
     @Test
     public void willRecurivelyMergeValues() {
-        System.setProperty("my.name", "Tim");
-        addProperty("my.fullname", "${my.name} Tennant", APPLICATION_PROPERTIES);
-        addProperty(key, "Hello ${my.fullname}, how are you today?", FALLBACK_PROPERTIES);
-        assertThat(load().get(key), is("Hello Tim Tennant, how are you today?"));
+        System.setProperty("first.name", "Wade");
+        assertThat(load().get("greeting2"), is("I know who Parzival(Wade Owen) really is"));
     }
 
-
-    private void addProperty(String key, String value, Path propertyFilePath) {
-        Properties props = new Properties();
-        props.setProperty(key, value);
-        try {
-            props.store(new FileWriter(propertyFilePath.toFile()), null);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Test
+    public void canSpecifyRootPackageForPropertiesFiles() {
+        String propertiesPackagePath = "easter" + separator + "egg";
+        assertThat(load(propertiesPackagePath).get("aech"), is("Helen Harris"));
     }
 
 
     private String someKey() {
         return some(string.ofLength(4));
     }
+
+    private String someValue() {
+        return some(string);
+    }
+
 
 
 }

@@ -14,8 +14,13 @@ Usage
     import io.shaka.config.*;
     ...
     Config config = Config.load();
-    String foo = config.get("bar");
-    
+    String aech = config.get("helen.harris");
+
+The above example loads the config files from classpath root package. To load config files the package some.other:
+
+    Config config = Config.load("some/other")
+
+
 
 Templated Properties
 --------------------
