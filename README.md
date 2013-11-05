@@ -9,7 +9,7 @@ System properties -> application.properties -> fallback.properties
 
 Properties are immutable once defined they can not be overridden, e.g. fallback properties can not override application properties can not override system properties.
 
-For example fallback.properties could be baked into the artifact(.jar), the application.properties provide environment specific properties and overrides, and system properties can be used to provide overrides at application startup.
+For example fallback.properties could be baked into the artifact(.jar), the application.properties provide environment specific properties, and system properties can be used to provide properties at application startup.
 
 Usage
 -----
