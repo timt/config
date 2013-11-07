@@ -1,2 +1,3 @@
 mvn://repo1.maven.org/maven2/junit:junit:jar|sources:4.11
 mvn://repo1.maven.org/maven2/org.hamcrest:hamcrest-all:jar|sources:1.3
+mvn://timt.github.io/repo/releases/io.shaka:some:jar|sources:1

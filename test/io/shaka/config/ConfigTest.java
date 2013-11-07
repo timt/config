@@ -2,17 +2,9 @@ package io.shaka.config;
 
 import org.junit.Test;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
-
-import static io.shaka.config.Config.APPLICATION_PROPERTIES;
-import static io.shaka.config.Config.FALLBACK_PROPERTIES;
 import static io.shaka.config.Config.load;
 import static io.shaka.some.SomeValues.*;
 import static java.io.File.separator;
-import static java.lang.String.format;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
